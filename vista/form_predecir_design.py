@@ -26,21 +26,29 @@ class VistaPrediccionDesign(ctk.CTkFrame):
         
     def controles_panel_izquierdo(self):
         
-        self.panel_izquierdo.grid_columnconfigure(2, weight=1)
+        self.panel_izquierdo.grid_columnconfigure(1, weight=1)
+        self.panel_izquierdo.grid_columnconfigure(2, weight=3)
+        self.panel_izquierdo.grid_columnconfigure(3, weight=1)
         
         # Carpeta origen
-        ctk.CTkLabel(self.panel_izquierdo, text="Ubicación Modelo:").grid(row=1, column=1, pady=5)
-        self.entrada_modelo = ctk.CTkEntry(self.panel_izquierdo,)
+        ctk.CTkLabel(self.panel_izquierdo, text="Modelo:").grid(row=1, column=1, pady=5)
+        self.entrada_modelo = ctk.CTkEntry(self.panel_izquierdo)
         self.entrada_modelo.grid(row=1, column=2, sticky="ew", pady=5)
+        self.boton_modelo = ctk.CTkButton(self.panel_izquierdo, text="Seleccionar", width=50)
+        self.boton_modelo.grid(row=1, column=3, pady=5)
         
         # Carpeta destino
-        ctk.CTkLabel(self.panel_izquierdo, text="Ubicación datos test:").grid(row=2, column=1, pady=5)
+        ctk.CTkLabel(self.panel_izquierdo, text="Archivo dataset:").grid(row=2, column=1, pady=5)
         self.entrada_datos_test = ctk.CTkEntry(self.panel_izquierdo)
         self.entrada_datos_test.grid(row=2, column=2, sticky="ew", pady=5)
+        self.boton_datos_test = ctk.CTkButton(self.panel_izquierdo, text="Seleccionar", width=50)
+        self.boton_datos_test.grid(row=2, column=3, pady=5)
         
-        ctk.CTkLabel(self.panel_izquierdo, text="Ubicación etiquetas:").grid(row=3, column=1, pady=5)
-        self.entrada_etiquetas_test = ctk.CTkEntry(self.panel_izquierdo)
-        self.entrada_etiquetas_test.grid(row=3, column=2, sticky="ew", pady=5)
+        ctk.CTkLabel(self.panel_izquierdo, text="Indices:").grid(row=3, column=1, pady=5)
+        self.entrada_indices_test = ctk.CTkEntry(self.panel_izquierdo)
+        self.entrada_indices_test.grid(row=3, column=2, sticky="ew", pady=5)
+        self.boton_indices_test = ctk.CTkButton(self.panel_izquierdo, text="Seleccionar", width=50)
+        self.boton_indices_test.grid(row=3, column=3, pady=5)
         
         
         #Botón para iniciar la creación del dataset
@@ -57,14 +65,6 @@ class VistaPrediccionDesign(ctk.CTkFrame):
         self.label_panel_dch2 = ctk.CTkLabel(self.panel_derecho, text="")
         self.label_panel_dch2.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
 
-        
-        
-    def toggle_fields(self):
-        # ClassName
-        if self.check_filtro.get() == 1:  # Si el Checkbutton está seleccionado
-            self.entry_semilla.configure(state='normal')  # Activar
-        else:
-            self.entry_semilla.configure(state='disabled')  # Desactivar
         
             
     def limpiar_panel(self, panel):

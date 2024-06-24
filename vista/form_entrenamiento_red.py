@@ -37,35 +37,36 @@ class VistaEntrenamientoDesign(ctk.CTkFrame):
 
         # Carpeta destino guardado del modelo
         ctk.CTkLabel(self.panel_izquierdo, text="Carpeta destino modelo:").grid(row=2, column=1, pady=5)
-        self.label_destino_modelo = ctk.CTkLabel(self.panel_izquierdo, text="")
+        self.label_destino_modelo = ctk.CTkEntry(self.panel_izquierdo)
         self.label_destino_modelo.grid(row=2, column=2, sticky="ew", pady=5)
         self.boton_destino_modelo = ctk.CTkButton(self.panel_izquierdo, text="Seleccionar", width=50)
         self.boton_destino_modelo.grid(row=2, column=3, pady=5)
 
         # Ruta a la carpeta H5
         ctk.CTkLabel(self.panel_izquierdo, text="Archivo dataset:").grid(row=3, column=1, pady=5)
-        self.label_dataset = ctk.CTkLabel(self.panel_izquierdo, text="")
+        self.label_dataset = ctk.CTkEntry(self.panel_izquierdo)
         self.label_dataset.grid(row=3, column=2, sticky="ew", pady=5)
         self.boton_dataset = ctk.CTkButton(self.panel_izquierdo, text="Seleccionar", width=50)
         self.boton_dataset.grid(row=3, column=3, pady=5)
 
         # Ruta a la carpeta pickle pristine
         ctk.CTkLabel(self.panel_izquierdo, text="Indices señales Pristine:").grid(row=4, column=1, pady=5)
-        self.label_indices_pristine = ctk.CTkLabel(self.panel_izquierdo, text="")
+        self.label_indices_pristine = ctk.CTkEntry(self.panel_izquierdo)
         self.label_indices_pristine.grid(row=4, column=2, sticky="ew", pady=5)
         self.boton_pristine = ctk.CTkButton(self.panel_izquierdo, text="Seleccionar", width=50)
         self.boton_pristine.grid(row=4, column=3, pady=5)
 
         # Ruta a la carpeta
         ctk.CTkLabel(self.panel_izquierdo, text="Indices señales Damage:").grid(row=5, column=1, pady=5)
-        self.label_indices_damage = ctk.CTkLabel(self.panel_izquierdo, text="")
+        self.label_indices_damage = ctk.CTkEntry(self.panel_izquierdo)
         self.label_indices_damage.grid(row=5, column=2, sticky="ew", pady=5)
         self.boton_damage = ctk.CTkButton(self.panel_izquierdo, text="Seleccionar", width=50)
         self.boton_damage.grid(row=5, column=3, pady=5)
 
         
         ctk.CTkLabel(self.panel_izquierdo, text="Tipo de modelo:").grid(row=6, column=1, pady=5)
-        self.tipo_creacion = ttk.Combobox(self.panel_izquierdo, values=["CNN1", "MLP"], state="readonly", width=45)
+        self.tipo_creacion = ttk.Combobox(self.panel_izquierdo, values=["CNN1_damage_detection", "MLP_damagge_detection", "CNN1_damage_location", "MLP_damagge_location"],
+                                          state="readonly", width=45)
         self.tipo_creacion.grid(row=6, column=2, columnspan=2, pady=5)
 
         
@@ -88,14 +89,9 @@ class VistaEntrenamientoDesign(ctk.CTkFrame):
 
         # Variable para el estado del checkbox de ClassName
         self.check_filtro = ctk.IntVar()
-        self.checkbutton_semilla = ctk.CTkCheckBox(self.panel_izquierdo, text="¿Quieres aplicar una semilla?", variable=self.check_filtro)
-        self.checkbutton_semilla.grid(row=12, column=1, columnspan=3, pady=5)
+        self.checkbutton_dataloader = ctk.CTkCheckBox(self.panel_izquierdo, text="Cargar todos los datos en memoria", variable=self.check_filtro)
+        self.checkbutton_dataloader.grid(row=12, column=1, columnspan=3, pady=5)
 
-        # Semilla de reproducibilidad
-        ctk.CTkLabel(self.panel_izquierdo, text="Valor de semilla:").grid(row=13, column=1, pady=5)
-        self.entry_semilla = ctk.CTkEntry(self.panel_izquierdo)
-        self.entry_semilla.grid(row=13, column=2, sticky="ew", pady=5)
-        self.entry_semilla.configure(state='disabled')
 
         # Botón para iniciar el entrenamiento
         self.button_entrenar = ctk.CTkButton(self.panel_izquierdo, text="Entrenar")

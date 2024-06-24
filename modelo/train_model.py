@@ -21,6 +21,7 @@ from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn import metrics
 import matplotlib.pyplot as plt
 from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
+from tensorflow.keras.metrics import MeanSquaredError, MeanAbsoluteError
 
 class ModeloEntrenamiento:
     def __init__(self):
@@ -28,25 +29,16 @@ class ModeloEntrenamiento:
         self.parent_dir = os.path.abspath(os.path.join(script_dir, os.pardir))
         
 
-    def entrenar(self, dataset, carpeta_modelo, nombre_modelo, indices_pristine, indices_damage, tipo_modelo, epochs, batch_size, lr, validation_split, panel, queue_message, random_seed=None):
+    def entrenar(self, dataset, carpeta_modelo, nombre_modelo, indices_pristine, indices_damage, tipo_modelo, epochs, batch_size, lr, validation_split, panel, queue_message, no_use_dataloader):
         ticket = Ticket(ticket_type=TicketPurpose.INICIO_TAREA,
                         ticket_value=["Se ha iniciado el entrenamiento del modelo."])
         queue_message.put(ticket)
         panel.event_generate("<<Check_queue>>")
         
+        self.tarea_localizacion = False
+        batch_size = batch_size
         
         print("Num GPUs Disponibles: ", len(tf.config.list_physical_devices('GPU')))
-
-        self.dataset = dataset
-        
-        train_indexes, val_indexes, self.test_indexes = self.indices_train_val(indices_pristine, indices_damage, validation_split)
-        batch_size = batch_size
-        train_generator = HDF5DataGenerator(dataset, train_indexes, batch_size=batch_size)
-        val_generator = HDF5DataGenerator(dataset, val_indexes, batch_size=batch_size)
-        if tipo_modelo == "MLP":
-            self.modelo = self.crear_modelo_mlp()
-        if tipo_modelo == "CNN1":
-            self.modelo = self.crear_modelo_cnn1()
         
         if not os.path.exists(carpeta_modelo):
             os.makedirs(carpeta_modelo)
@@ -54,7 +46,21 @@ class ModeloEntrenamiento:
         if not nombre_modelo.endswith('.h5'):
             nombre_modelo += '.h5'
             
-        #Callbacks
+        if tipo_modelo == "MLP_damagge_detection":
+            self.modelo = self.crear_modelo_mlp()
+        if tipo_modelo == "CNN1_damage_detection":
+            self.modelo = self.crear_modelo_cnn1()
+        if tipo_modelo == "MLP_damagge_location":
+            self.modelo = self.crear_modelo_mlp_location()
+            self.tarea_localizacion = True
+        if tipo_modelo == "CNN1_damage_location":
+            self.modelo = self.crear_modelo_cnn1_location()
+            self.tarea_localizacion = True
+            
+
+        self.dataset = dataset
+        
+        #Callbacks que se utilizan
         ruta_checkpoint_callback = os.path.join(self.parent_dir, nombre_modelo)
         checkpoint_callback = ModelCheckpoint(
             filepath=ruta_checkpoint_callback,
@@ -70,10 +76,41 @@ class ModeloEntrenamiento:
         
         callbacks = [CustomCallback(panel, queue_message), checkpoint_callback, reduce_lr]
         
+        #Optimizador ADAM
         optimizer = Adam(learning_rate= lr)
-        self.modelo.compile(optimizer=optimizer, loss='binary_crossentropy', metrics=['accuracy'])
+        
+        if self.tarea_localizacion:
+            print("Ha entrado en 1")
+            indexes_damage = []
+            with open(indices_damage, 'rb') as f:
+                indexes_damage = pickle.load(f)
 
-        self.history = self.modelo.fit(train_generator, validation_data=val_generator, epochs=epochs, callbacks=callbacks)
+            train_val_indexes, self.test_indexes = train_test_split(indexes_damage, test_size=0.2)
+            train_indexes, val_indexes = train_test_split(train_val_indexes, test_size=0.2)
+            self.modelo.compile(optimizer=optimizer, loss='mse', metrics=[MeanSquaredError(), MeanAbsoluteError()])
+        else:
+            print("Ha entrado en 2")
+            train_indexes, val_indexes, self.test_indexes = self.indices_train_val(indices_pristine, indices_damage, validation_split)
+            self.modelo.compile(optimizer=optimizer, loss='binary_crossentropy', metrics=['accuracy'])
+        
+        if no_use_dataloader:
+            print("Se van a cargar todos los datos de entrenamietnto en memoria")
+            X_train, y_train = self.carga_datos(train_indexes)
+            print("Se van a cargar todos los datos de validación en memoria")
+            X_val, y_val = self.carga_datos(val_indexes)
+            self.history = self.modelo.fit(X_train, y_train,
+                                           validation_data=(X_val, y_val),
+                                           epochs=epochs,
+                                           batch_size = batch_size,
+                                           callbacks=callbacks,
+                                           shuffle=True)
+            
+        else:
+            print("Ha entrado en 3")
+            train_generator = HDF5DataGenerator(dataset, train_indexes, tarea_localizacion = self.tarea_localizacion, batch_size=batch_size)
+            val_generator = HDF5DataGenerator(dataset, val_indexes, tarea_localizacion = self.tarea_localizacion, batch_size=batch_size)
+            self.history = self.modelo.fit(train_generator, validation_data=val_generator, epochs=epochs, callbacks=callbacks)
+        
         
         ruta_modelo_guardar = os.path.join(carpeta_modelo, nombre_modelo)
 
@@ -100,7 +137,22 @@ class ModeloEntrenamiento:
         hidden4 = Dense(16, activation='relu', name='Hidden_Layer_4')(dropout3)
         dropout4 = Dropout(rate=0.2, name='Dropout_4')(hidden4)
         output_layer = Dense(1, activation='sigmoid', name='Output_Layer')(dropout4)
-        model = Model(inputs=input_layer, outputs=output_layer, name='MLP_Model_bigdata')
+        model = Model(inputs=input_layer, outputs=output_layer, name='MLP_Model_damage_detection')
+        
+        return model
+    
+    def crear_modelo_mlp_location(self):
+        input_layer = Input(shape=(2500,), name='Input_Layer')
+        hidden1 = Dense(256, activation='relu', name='Hidden_Layer_1')(input_layer)
+        dropout1 = Dropout(rate=0.2, name='Dropout_1')(hidden1)
+        hidden2 = Dense(128, activation='relu', name='Hidden_Layer_2')(dropout1)
+        dropout2 = Dropout(rate=0.2, name='Dropout_2')(hidden2)
+        hidden3 = Dense(128, activation='relu', name='Hidden_Layer_3')(dropout2)
+        dropout3 = Dropout(rate=0.2, name='Dropout_3')(hidden3)
+        hidden4 = Dense(16, activation='relu', name='Hidden_Layer_4')(dropout3)
+        dropout4 = Dropout(rate=0.2, name='Dropout_4')(hidden4)
+        output_layer = Dense(2, name='Output_Layer')(dropout4)
+        model = Model(inputs=input_layer, outputs=output_layer, name='MLP_Model_damage_location')
         
         return model
     
@@ -119,20 +171,28 @@ class ModeloEntrenamiento:
         dense1 = Dense(128, activation='relu')(flatten)
         dropout4 = Dropout(rate=0.3, name='Dropout_4')(dense1)
         output_layer = Dense(1, activation='sigmoid', name='Output')(dropout4)
-        model = Model(inputs=input_layer, outputs=output_layer, name='CNN1_Model_bigdata')
+        model = Model(inputs=input_layer, outputs=output_layer, name='CNN1_Model_damage_detection')
         
         return model
         
     def pintar_graficas(self):
+        accuracy_type = "accuracy"
+        val_accuracy_type = "val_accuracy"
+        label_y_axis = "Precisión"
+        if self.tarea_localizacion:
+            accuracy_type = "mean_absolute_error"
+            val_accuracy_type = "val_mean_absolute_error"
+            label_y_axis = "MAE"
+            
         fig = Figure(figsize=(12, 6), dpi=100)
         plot1 = fig.add_subplot(121)
         plot2 = fig.add_subplot(122)
         
-        plot1.plot(self.history.history['accuracy'], label='Precisión de Entrenamiento')
-        plot1.plot(self.history.history['val_accuracy'], label='Precisión de Validación')
+        plot1.plot(self.history.history[accuracy_type], label='Precisión de Entrenamiento')
+        plot1.plot(self.history.history[val_accuracy_type], label='Precisión de Validación')
         plot1.set_title('Precisión a lo largo de las épocas')
         plot1.set_xlabel('Épocas')
-        plot1.set_ylabel('Precisión')
+        plot1.set_ylabel(label_y_axis)
         plot1.legend()
         
         plot2.plot(self.history.history['loss'], label='Pérdida de Entrenamiento')
@@ -200,14 +260,35 @@ class ModeloEntrenamiento:
         print(f"[INFO] Señales totales para el proceso: {len(indexes_combined)}")
 
         # Dividir los índices en entrenamiento y validación
-        train_val_indexes, test_indexes = train_test_split(indexes_combined, test_size=0.2, random_state=41)
-        train_indexes, val_indexes = train_test_split(train_val_indexes, test_size=validation_split, random_state=40)
+        train_val_indexes, test_indexes = train_test_split(indexes_combined, test_size=0.2)
+        train_indexes, val_indexes = train_test_split(train_val_indexes, test_size=validation_split)
         
         return train_indexes, val_indexes, test_indexes
     
     def normalize_signal(self, signal):
         normalized_signal = 2 * ((signal - np.min(signal)) / (np.max(signal) - np.min(signal))) - 1
         return normalized_signal
+    
+    def carga_datos(self, indexes):
+        X = []
+        y = []
+        with h5py.File(self.dataset, 'r') as f:
+            for classname, index, dataset_name in indexes:
+                dset = f[f'train/{classname}/{index}/{dataset_name}']
+                signal = dset[:]
+                signal = self.normalize_signal(signal)
+                if self.tarea_localizacion:
+                    etiqueta_x = dset.attrs['label_x']
+                    etiqueta_y = dset.attrs['label_y']
+                    y.append([etiqueta_x, etiqueta_y])
+                else:   
+                    label = dset.attrs['Label']
+                    y.append(label)
+                X.append(signal)
+        X = np.array(X)
+        y = np.array(y)
+        
+        return X, y
     
 
     

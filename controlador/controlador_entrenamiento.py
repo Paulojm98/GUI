@@ -24,7 +24,6 @@ class ControladorEntrenamiento:
         #self.cola_mensajes = queue.Queue()  # Cola para mensajes del hilo de entrenamiento
         
     def _bind(self):
-        self.panel.checkbutton_semilla.configure(command=self.toggle_fields)
         self.panel.boton_destino_modelo.configure(command=self.seleccionar_carpeta_modelo)
         self.panel.boton_dataset.configure(command=self.seleccionar_archivo_dataset)
         self.panel.boton_pristine.configure(command=self.seleccionar_archivo_pristine)
@@ -34,22 +33,20 @@ class ControladorEntrenamiento:
 
     def entrenar_red(self):
         try:
-            dataset = self.panel.label_dataset.cget("text")
-            carpeta_modelo = self.panel.label_destino_modelo.cget("text")
+            dataset = self.panel.label_dataset.get()
+            carpeta_modelo = self.panel.label_destino_modelo.get()
             nombre_modelo = self.panel.entry_nombre_modelo.get()
-            indices_pristine = self.panel.label_indices_pristine.cget("text")
-            indices_damage = self.panel.label_indices_damage.cget("text")
+            indices_pristine = self.panel.label_indices_pristine.get()
+            indices_damage = self.panel.label_indices_damage.get()
             tipo_modelo = self.panel.tipo_creacion.get()
             epocas = int(self.panel.entry_epocas.get())
             batch_size = int(self.panel.entry_batch_size.get())
             lr = float(self.panel.entry_learning_rate.get())
             validation_split = float(self.panel.entry_validation_split.get())
-            semilla = None
-            if self.panel.check_filtro.get() == 1:
-                semilla = int(self.panel.entry_semilla.get())
+            use_dataloader = self.panel.check_filtro.get()
                 
             self.modelo.entrenar(dataset, carpeta_modelo, nombre_modelo, indices_pristine, indices_damage, tipo_modelo, 
-                                 epocas, batch_size, lr, validation_split, self.panel, self.queue_message, semilla)
+                                 epocas, batch_size, lr, validation_split, self.panel, self.queue_message, use_dataloader)
             
         except ValueError:
             ticket = Ticket(ticket_type=TicketPurpose.ERROR,
@@ -91,36 +88,35 @@ class ControladorEntrenamiento:
             canvas = FigureCanvasTkAgg(fig, self.panel_derecho)
             canvas.draw()
             canvas.get_tk_widget().grid(row=2, column=0, pady=10, padx=10, sticky="nsew")
-            self.modelo.prediccion_modelo()
+            if not self.modelo.tarea_localizacion:
+                self.modelo.prediccion_modelo()
             
         
-        
-    def toggle_fields(self):
-        # ClassName
-        if self.panel.check_filtro.get() == 1:  # Si el Checkbutton está seleccionado
-            self.panel.entry_semilla.configure(state='normal')  # Activar
-        else:
-            self.panel.entry_semilla.configure(state='disabled')  # Desactivar
+    
             
     def seleccionar_carpeta_modelo(self):
         ruta_carpeta = filedialog.askdirectory()
         if ruta_carpeta:
-            self.panel.label_destino_modelo.configure(text=ruta_carpeta)
+            self.panel.label_destino_modelo.delete(0, "end")  # Borrar cualquier contenido previo
+            self.panel.label_destino_modelo.insert(0, ruta_carpeta)  # Insertar la nueva ruta
 
     def seleccionar_archivo_dataset(self):
         ruta_archivo = filedialog.askopenfilename()
         if ruta_archivo:
-            self.panel.label_dataset.configure(text=ruta_archivo)
+            self.panel.label_dataset.delete(0, "end")  # Borrar cualquier contenido previo
+            self.panel.label_dataset.insert(0, ruta_archivo)  # Insertar la nueva ruta
 
     def seleccionar_archivo_pristine(self):
         ruta_archivo = filedialog.askopenfilename()
         if ruta_archivo:
-            self.panel.label_indices_pristine.configure(text=ruta_archivo)
+            self.panel.label_indices_pristine.delete(0, "end")  # Borrar cualquier contenido previo
+            self.panel.label_indices_pristine.insert(0, ruta_archivo)  # Insertar la nueva ruta
 
     def seleccionar_archivo_damage(self):
         ruta_archivo = filedialog.askopenfilename()
         if ruta_archivo:
-            self.panel.label_indices_damage.configure(text=ruta_archivo)
+            self.panel.label_indices_damage.delete(0, "end")  # Borrar cualquier contenido previo
+            self.panel.label_indices_damage.insert(0, ruta_archivo)  # Insertar la nueva ruta
             
             
     def limpiar_panel(self, panel):

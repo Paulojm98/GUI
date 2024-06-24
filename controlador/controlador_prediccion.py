@@ -8,6 +8,7 @@ from queue import Queue
 import threading
 from utilidades.util_ticket import TicketPurpose, Ticket
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from tkinter import filedialog
 
 class ControladorPrediccion:
     def __init__(self, modelo, vista):
@@ -19,16 +20,19 @@ class ControladorPrediccion:
         self._bind()
         
     def _bind(self):
+        self.panel.boton_modelo.configure(command=self.seleccionar_modelo)
+        self.panel.boton_datos_test.configure(command=self.seleccionar_archivo_dataset)
+        self.panel.boton_indices_test.configure(command=self.seleccionar_indices)
         self.panel.button_predecir.configure(command=lambda: threading.Thread(target=self.realizar_prediccion).start())
         self.vista.root.bind("<<Check_queue>>", self.check_queue)
 
     def realizar_prediccion(self):
         try:
             modelo = self.panel.entrada_modelo.get()
-            X = self.panel.entrada_datos_test.get()
-            Y = self.panel.entrada_etiquetas_test.get()
+            dataset = self.panel.entrada_datos_test.get()
+            indices = self.panel.entrada_indices_test.get()
             
-            self.modelo.predecir(modelo, X, Y, self.panel, self.queue_message)
+            self.modelo.predecir(modelo, dataset, indices, self.panel, self.queue_message)
             
             
         except FileNotFoundError:
@@ -54,12 +58,25 @@ class ControladorPrediccion:
             canvas.draw()
             canvas.get_tk_widget().grid(row=2, column=0, pady=10, padx=10, sticky="nsew")
             
-    def toggle_fields(self):
-        # ClassName
-        if self.panel.check_filtro.get() == 1:  # Si el Checkbutton está seleccionado
-            self.panel.entry_semilla.configure(state='normal')  # Activar
-        else:
-            self.panel.entry_semilla.configure(state='disabled')  # Desactivar
+           
+    def seleccionar_modelo(self):
+        ruta_archivo = filedialog.askopenfilename()
+        if ruta_archivo:
+            self.panel.entrada_modelo.delete(0, "end")  # Borrar cualquier contenido previo
+            self.panel.entrada_modelo.insert(0, ruta_archivo)  # Insertar la nueva ruta
+
+    def seleccionar_archivo_dataset(self):
+        ruta_archivo = filedialog.askopenfilename()
+        if ruta_archivo:
+            self.panel.entrada_datos_test.delete(0, "end")  # Borrar cualquier contenido previo
+            self.panel.entrada_datos_test.insert(0, ruta_archivo)  # Insertar la nueva ruta
+
+    def seleccionar_indices(self):
+        ruta_archivo = filedialog.askopenfilename()
+        if ruta_archivo:
+            self.panel.entrada_indices_test.delete(0, "end")  # Borrar cualquier contenido previo
+            self.panel.entrada_indices_test.insert(0, ruta_archivo)  # Insertar la nueva ruta
+    
             
     
         
