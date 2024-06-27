@@ -26,16 +26,24 @@ class VistaBDatosDesign(ctk.CTkFrame):
         
     def controles_panel_izquierdo(self):
         
+        self.panel_izquierdo.grid_columnconfigure(1, weight=1)
+        self.panel_izquierdo.grid_columnconfigure(2, weight=3)
+        self.panel_izquierdo.grid_columnconfigure(3, weight=1)
+        
         self.panel_izquierdo.grid_columnconfigure(2, weight=1)
         # Ubicación datos de entrenamiento
-        ctk.CTkLabel(self.panel_izquierdo, text="Nombre archivo H5:").grid(row=1, column=1, pady=5)
+        ctk.CTkLabel(self.panel_izquierdo, text="Archivo Dataset:").grid(row=1, column=1, pady=5)
         self.entry_data_train = ctk.CTkEntry(self.panel_izquierdo,)
         self.entry_data_train.grid(row=1, column=2, sticky="ew", pady=5)
+        self.boton_ruta_dataset = ctk.CTkButton(self.panel_izquierdo, text="Seleccionar", width=50)
+        self.boton_ruta_dataset.grid(row=1, column=3, pady=5)
         
         # Carpeta destino
         ctk.CTkLabel(self.panel_izquierdo, text="Ubicación indices:").grid(row=2, column=1, pady=5)
         self.entry_destino_train = ctk.CTkEntry(self.panel_izquierdo)
         self.entry_destino_train.grid(row=2, column=2, sticky="ew", pady=5)
+        self.boton_ruta_indices = ctk.CTkButton(self.panel_izquierdo, text="Seleccionar", width=50)
+        self.boton_ruta_indices.grid(row=2, column=3, pady=5)
         
         # Carpeta destino
         ctk.CTkLabel(self.panel_izquierdo, text="Nombre archivo índices Pristine:").grid(row=3, column=1, pady=5)

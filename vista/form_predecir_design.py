@@ -50,6 +50,16 @@ class VistaPrediccionDesign(ctk.CTkFrame):
         self.boton_indices_test = ctk.CTkButton(self.panel_izquierdo, text="Seleccionar", width=50)
         self.boton_indices_test.grid(row=3, column=3, pady=5)
         
+        ctk.CTkLabel(self.panel_izquierdo, text="Tipo tarea:").grid(row=4, column=1, pady=5)
+        self.tipo_tarea = ttk.Combobox(self.panel_izquierdo, values=["Detección", "Localización"],
+                                          state="readonly", width=45)
+        self.tipo_tarea.grid(row=4, column=2, columnspan=2, pady=5)
+        
+        # Variable para el estado del checkbox de ClassName
+        self.check_no_use_dataloader = ctk.IntVar()
+        self.checkbutton_dataloader = ctk.CTkCheckBox(self.panel_izquierdo, text="Cargar todos los datos en memoria", variable=self.check_no_use_dataloader)
+        self.checkbutton_dataloader.grid(row=5, column=1, columnspan=3, pady=5)
+        
         
         #Botón para iniciar la creación del dataset
         self.button_predecir = ctk.CTkButton(self.panel_izquierdo, text="Predecir")
@@ -61,9 +71,6 @@ class VistaPrediccionDesign(ctk.CTkFrame):
         self.label_panel_dch1 = ctk.CTkLabel(self.panel_derecho, text="")
         self.label_panel_dch1.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
     
-        # Segundo label justo debajo del primero en panel_derecho
-        self.label_panel_dch2 = ctk.CTkLabel(self.panel_derecho, text="")
-        self.label_panel_dch2.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
 
         
             

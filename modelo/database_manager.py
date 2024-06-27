@@ -34,9 +34,9 @@ class ModeloBDatos:
             indexes_damage = []        
             
             with h5py.File(hdf5_file, 'r') as f:
-                for classname in f['train'].keys():
+                for classname in f['test'].keys():
                     print(f"[INFO] ClassName: {classname}")
-                    grp_class = f['train'][classname]
+                    grp_class = f['test'][classname]
                     for index in grp_class.keys():
                         grp_index = grp_class[index]
                         for dataset_name in grp_index.keys():

@@ -10,6 +10,7 @@ Created on Wed Apr  3 21:41:56 2024
 from queue import Queue
 import threading
 from utilidades.util_ticket import TicketPurpose
+from tkinter import filedialog
 
 class ControladorBDatos:
     def __init__(self, modelo, vista):
@@ -21,6 +22,8 @@ class ControladorBDatos:
         self._bind()
 
     def _bind(self):
+        self.panel.boton_ruta_dataset.configure(command=self.seleccionar_archivo_dataset)
+        self.panel.boton_ruta_indices.configure(command=self.seleccionar_carpeta_indices)
         self.panel.checkbutton_filtro.configure(command=self.toggle_fields)
         self.panel.button_crear_indices.configure(command=lambda: threading.Thread(target=self.crear_indices).start())
         self.vista.root.bind("<<Check_queue>>", self.check_queue)
@@ -62,6 +65,18 @@ class ControladorBDatos:
             self.panel.transmisor_entry.configure(state='disabled')  # Desactivar
             self.panel.receptor_entry.configure(state='disabled')
             self.panel.checkbutton_ruido.configure(state='disabled')
+            
+    def seleccionar_carpeta_indices(self):
+        ruta_carpeta = filedialog.askdirectory()
+        if ruta_carpeta:
+            self.panel.entry_destino_train.delete(0, "end")  # Borrar cualquier contenido previo
+            self.panel.entry_destino_train.insert(0, ruta_carpeta)  # Insertar la nueva ruta
+
+    def seleccionar_archivo_dataset(self):
+        ruta_archivo = filedialog.askopenfilename()
+        if ruta_archivo:
+            self.panel.entry_data_train.delete(0, "end")  # Borrar cualquier contenido previo
+            self.panel.entry_data_train.insert(0, ruta_archivo)  # Insertar la nueva ruta
             
     
     def limpiar_panel(self, panel):

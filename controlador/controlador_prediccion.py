@@ -28,11 +28,17 @@ class ControladorPrediccion:
 
     def realizar_prediccion(self):
         try:
+            tarea_localizacion = False
             modelo = self.panel.entrada_modelo.get()
             dataset = self.panel.entrada_datos_test.get()
             indices = self.panel.entrada_indices_test.get()
+            tipo_tarea = self.panel.tipo_tarea.get()
+            no_use_dataloader = self.panel.check_no_use_dataloader.get()
             
-            self.modelo.predecir(modelo, dataset, indices, self.panel, self.queue_message)
+            if tipo_tarea == "Localización":
+                tarea_localizacion = True
+            
+            self.modelo.predecir(modelo, dataset, indices, tarea_localizacion, no_use_dataloader, self.panel, self.queue_message)
             
             
         except FileNotFoundError:
@@ -53,8 +59,8 @@ class ControladorPrediccion:
             
         if msg.ticket_type == TicketPurpose.FIN_TAREA:
             self.panel.label_panel_dch1.configure(text=msg.ticket_value[0])
-            self.panel.label_panel_dch2.configure(text=msg.ticket_value[1])
-            canvas = FigureCanvasTkAgg(self.modelo.fig, self.panel_derecho)  # `self.panel` es el panel de CustomTkinter donde quieres mostrar el gráfico
+            figure = self.modelo.pintar_grafica()
+            canvas = FigureCanvasTkAgg(figure, self.panel_derecho)
             canvas.draw()
             canvas.get_tk_widget().grid(row=2, column=0, pady=10, padx=10, sticky="nsew")
             

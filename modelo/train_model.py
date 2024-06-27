@@ -80,7 +80,6 @@ class ModeloEntrenamiento:
         optimizer = Adam(learning_rate= lr)
         
         if self.tarea_localizacion:
-            print("Ha entrado en 1")
             indexes_damage = []
             with open(indices_damage, 'rb') as f:
                 indexes_damage = pickle.load(f)
@@ -89,7 +88,6 @@ class ModeloEntrenamiento:
             train_indexes, val_indexes = train_test_split(train_val_indexes, test_size=0.2)
             self.modelo.compile(optimizer=optimizer, loss='mse', metrics=[MeanSquaredError(), MeanAbsoluteError()])
         else:
-            print("Ha entrado en 2")
             train_indexes, val_indexes, self.test_indexes = self.indices_train_val(indices_pristine, indices_damage, validation_split)
             self.modelo.compile(optimizer=optimizer, loss='binary_crossentropy', metrics=['accuracy'])
         
@@ -106,7 +104,6 @@ class ModeloEntrenamiento:
                                            shuffle=True)
             
         else:
-            print("Ha entrado en 3")
             train_generator = HDF5DataGenerator(dataset, train_indexes, tarea_localizacion = self.tarea_localizacion, batch_size=batch_size)
             val_generator = HDF5DataGenerator(dataset, val_indexes, tarea_localizacion = self.tarea_localizacion, batch_size=batch_size)
             self.history = self.modelo.fit(train_generator, validation_data=val_generator, epochs=epochs, callbacks=callbacks)

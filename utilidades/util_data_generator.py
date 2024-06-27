@@ -18,7 +18,7 @@ class HDF5DataGenerator(Sequence):
 
     def __len__(self):
         # Devuelve el número de lotes por época
-        return int(np.floor(len(self.indexes) / self.batch_size))
+        return int(np.ceil(len(self.indexes) / self.batch_size))
 
     def __getitem__(self, index):
         # Generar un lote de datos

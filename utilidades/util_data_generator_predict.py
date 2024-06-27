@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jun 25 00:10:10 2024
+Created on Thu Jun 27 15:59:53 2024
 
-@author: paulo
+@author: PMJUAREZM
 """
 
 from tensorflow.keras.utils import Sequence
@@ -10,14 +10,14 @@ import numpy as np
 import h5py
 
 class HDF5PredictionGenerator(Sequence):
-    def __init__(self, hdf5_file, indexes, batch_size=32):
+    def __init__(self, hdf5_file, indexes, batch_size=512):
         self.hdf5_file = hdf5_file
         self.indexes = indexes
         self.batch_size = batch_size
 
     def __len__(self):
         # Devuelve el número de lotes por época
-        return int(np.floor(len(self.indexes) / self.batch_size))
+        return int(np.ceil(len(self.indexes) / self.batch_size))
 
     def __getitem__(self, index):
         # Generar un lote de datos
